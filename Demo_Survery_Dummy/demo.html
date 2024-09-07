@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image-Text Evaluation Survey</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 15px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+
+        .slider:hover {
+            opacity: 1;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+
+        .image-card img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            max-height: 400px;
+        }
+
+        .image-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto px-4 py-8"></div>
+
+    <script>
+        const app = {
+            currentImageIndex: 0,
+            totalImages: 5, // Assuming there are 5 images, adjust as needed
+            currentModelOrder: [],
+            demoImages: [
+                './images/01.jpg',
+                './images/02.jpg',
+                './images/03.jpg',
+                './images/04.jpg',
+                './images/05.jpg'
+            ],
+            demoTexts: [
+                "A serene landscape with mountains in the background and a calm lake in the foreground.",
+                "A bustling city street with tall skyscrapers and people walking on the sidewalk.",
+                "A colorful sunset over the ocean with silhouettes of palm trees.",
+                "A cozy living room interior with a fireplace and comfortable furniture.",
+                "A close-up of a beautiful flower with vibrant petals and a bee collecting nectar."
+            ],
+
+            init: function() {
+                this.loadWelcomePage();
+            },
+
+            loadWelcomePage: function() {
+                const content = `
+                    <h1 class="text-2xl font-bold text-center mb-6">Welcome to the Image-Text Evaluation Survey</h1>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                        <h2 class="text-xl font-semibold mb-4">About This Research</h2>
+                        <p class="mb-4">This survey is part of a Master's Thesis research project titled:</p>
+                        <p class="text-lg font-medium text-blue-600 mb-4">"AI-Generated Alternative Text Suggestions for Images in Moodle: Enhancing Web Accessibility for Visually Impaired Users"</p>
+                        <p class="mb-4">Your participation will help evaluate the effectiveness of AI-generated alternative texts for images, aimed at improving web accessibility for visually impaired users in Moodle learning environments.</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                        <h2 class="text-xl font-semibold mb-4">Instructions</h2>
+                        <ol class="list-decimal list-inside space-y-2 mb-6">
+                            <li>You will be shown a series of images, one at a time.</li>
+                            <li>For each image, you'll see 5 different AI-generated text descriptions.</li>
+                            <li>Rate each description on a scale from 1 (Bad) to 5 (Excellent).</li>
+                            <li>Use the slider under each description to set your rating.</li>
+                            <li>Click 'Next Image' to proceed after rating all descriptions.</li>
+                            <li>Complete the evaluation for all images to finish the study.</li>
+                        </ol>
+                    </div>
+
+                    <div class="text-center mt-8">
+                        <button onclick="app.startEvaluation()" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition duration-300 text-lg font-semibold">
+                            Start Evaluation
+                        </button>
+                    </div>
+                `;
+                document.getElementById('app').innerHTML = content;
+            },
+
+            startEvaluation: function() {
+                this.loadImage(0);
+            },
+
+            loadImage: function(index) {
+                this.currentImageIndex = index;
+                this.renderEvaluationPage();
+            },
+
+            renderEvaluationPage: function() {
+                const models = ['Model A', 'Model B', 'Model C', 'Model D', 'Model E'];
+                this.currentModelOrder = [...models].sort(() => Math.random() - 0.5);
+
+                const content = `
+                    <header class="mb-8">
+                        <h1 class="text-2xl font-semibold text-gray-800">Image Evaluation</h1>
+                        <p class="text-sm text-gray-600">Image ${this.currentImageIndex + 1} of ${this.totalImages}</p>
+                    </header>
+                    
+                    <div class="evaluation-card p-6 mb-8 bg-white rounded-lg shadow-md">
+                        <div class="mb-6">
+                            <img src="${this.demoImages[this.currentImageIndex]}" alt="Image ${this.currentImageIndex + 1}" class="w-full h-auto object-contain rounded-md" style="max-height: 300px;">
+                        </div>
+
+                        <div class="space-y-6">
+                            ${this.currentModelOrder.map((model, index) => `
+                                <div class="bg-gray-50 p-4 rounded-md">
+                                    <p class="text-sm font-medium text-gray-700 mb-2">${this.demoTexts[this.currentImageIndex]}</p>
+                                    <input type="range" min="1" max="5" value="3" class="slider" id="slider-${index}">
+                                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                        <span>Not accurate</span>
+                                        <span>Average</span>
+                                        <span>Very accurate</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="mt-8 flex justify-center">
+                            ${this.currentImageIndex < this.totalImages - 1 ? `
+                                <button onclick="app.nextImage()" class="bg-blue-500 text-white px-6 py-2 rounded-md text-lg hover:bg-blue-600 transition duration-300">Next Image</button>
+                            ` : `
+                                <button onclick="app.finishSurvey()" class="bg-green-500 text-white px-6 py-2 rounded-md text-lg hover:bg-green-600 transition duration-300">Finish Survey</button>
+                            `}
+                        </div>
+                    </div>
+
+                    <div class="text-center text-sm text-gray-600 mt-4">
+                        <p>Your progress: ${this.currentImageIndex + 1} / ${this.totalImages}</p>
+                    </div>
+                `;
+                document.getElementById('app').innerHTML = content;
+            },
+
+            nextImage: function() {
+                this.loadImage(this.currentImageIndex + 1);
+            },
+
+            finishSurvey: function() {
+                this.showThankYouPage();
+            },
+
+            showThankYouPage: function() {
+                const content = `
+                    <h1 class="text-3xl font-bold text-center mb-8">Thank You for Your Participation!</h1>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <p class="mb-4">Your evaluations have been successfully saved. Your input is invaluable for our research.</p>
+                        <p class="mb-4">Here's what happens next:</p>
+                        <ul class="list-disc list-inside space-y-2 mb-6">
+                            <li>Your responses will be analyzed along with those of other participants.</li>
+                            <li>The results will help improve image description technologies.</li>
+                            <li>No personally identifiable information has been stored with your responses.</li>
+                        </ul>
+                        <p class="text-sm text-gray-600">If you have any questions about this study, please contact our research team at research@example.com.</p>
+                    </div>
+                    <div class="text-center mt-8">
+                        <button onclick="app.loadWelcomePage()" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition duration-300">
+                            Back to Home
+                        </button>
+                    </div>
+                `;
+                document.getElementById('app').innerHTML = content;
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            app.init();
+        });
+    </script>
+</body>
+</html>
